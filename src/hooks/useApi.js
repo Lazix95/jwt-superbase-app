@@ -16,6 +16,15 @@ export function useApi() {
     return tokenSavedAt + (token.expires_in - 59.5 * 60) * 1000;
   }, [token, tokenSavedAt]);
 
+  // Napraviti da auto refresh radi ispravno nakon refresha stranice (sesija mora da se zadrzi);
+  useEffect(() => {
+    let savedToken = localStorage.getItem('token');
+    if (!savedToken) return;
+    savedToken = JSON.parse(savedToken);
+    setToken(savedToken.token);
+    setTokenSavedAt(savedToken.savedAt);
+  }, []);
+
   useEffect(() => {
     if (!tokenExpiresAt) return;
     if (timeout.current) {
@@ -25,7 +34,12 @@ export function useApi() {
     const timestamp = new Date().getTime();
     const time = tokenExpiresAt - timestamp;
     console.log('time ', time / 1000);
-    timeout.current = setTimeout(refreshToken, time);
+    if (time >= 0) {
+      timeout.current = setTimeout(refreshToken, time);
+    } else {
+      refreshToken();
+    }
+
   }, [tokenExpiresAt, token]);
 
   async function login() {
@@ -40,23 +54,28 @@ export function useApi() {
     }
 
     const accessToken = data.session;
+    const savedAt = new Date().getTime();
     setToken(accessToken);
-    setTokenSavedAt(new Date().getTime());
+    setTokenSavedAt(savedAt);
+    localStorage.setItem('token', JSON.stringify({token: accessToken, savedAt}));
     console.log('JWT Access Token:', accessToken)
   }
 
   async function refreshToken() {
-    const { data, error } = await supabase.auth.refreshSession({ refresh_token: token.refresh_token})
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token: token.refresh_token + '2'})
 
     if (error) {
+      logout();
       console.error('Failed to refresh token:', error)
       return null
     }
 
     const newSession = data.session
+    const savedAt = new Date().getTime();
     console.log('New JWT access token:', newSession);
     setToken(newSession);
-    setTokenSavedAt(new Date().getTime());
+    setTokenSavedAt(savedAt);
+    localStorage.setItem('token', JSON.stringify({token: newSession, savedAt}));
     return newSession
   }
 
@@ -68,6 +87,9 @@ export function useApi() {
     } else {
       console.log('User successfully logged out.')
       setToken(null);
+      setToken(null);
+      setTokenSavedAt(null);
+      localStorage.clear()
     }
   }
 
