@@ -1,14 +1,10 @@
-import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import {useApi} from "./hooks/useApi.js";
-import {useOrders} from "./hooks/useOrders.js";
 
 function App() {
-  const [count, setCount] = useState(0);
-  const {login, refreshToken, logout, isLoggedIn} = useApi();
-  const {fetchOrders, orders} = useOrders();
+  const {login, refreshToken, logout, isLoggedIn, tokenSavedAt, tokenExpiresAt} = useApi();
 
   return (
     <>
@@ -21,7 +17,8 @@ function App() {
         </a>
       </div>
       <h1>Vite + React</h1>
-      <h3>Is Logged In: {isLoggedIn}</h3>
+      <h3>Is Logged In: {isLoggedIn ? 'true' : 'false'} at {tokenSavedAt}</h3>
+      <h3>Expires: {tokenExpiresAt}</h3>
       <div className="card">
         <button onClick={login}>
           Login
