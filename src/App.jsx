@@ -1,43 +1,16 @@
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import {IconSpinner} from "./components/icons/IconSpinner.jsx";
+import {Home} from "./components/Home.jsx";
 import {useApi} from "./hooks/useApi.js";
+import {HomeGuest} from "./components/HomeGuest.jsx";
 
 function App() {
-  const {login, refreshToken, logout, isLoggedIn, tokenSavedAt, tokenExpiresAt} = useApi();
-
+  const {isLoading, isLoggedIn} = useApi({shouldLoadUser: true});
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <h3>Is Logged In: {isLoggedIn ? 'true' : 'false'} at {tokenSavedAt}</h3>
-      <h3>Expires: {tokenExpiresAt}</h3>
-      <div className="card">
-        <button onClick={login}>
-          Login
-        </button>
-
-        <button onClick={refreshToken}>
-          Refresh
-        </button>
-
-        <button onClick={logout}>
-          Logout
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      {isLoading ? <IconSpinner /> : null}
+      {!isLoading && !isLoggedIn ? <HomeGuest/> : null}
+      {!isLoading && isLoggedIn ? <Home/> : null}
     </>
   )
 }

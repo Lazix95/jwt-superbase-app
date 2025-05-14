@@ -1,28 +1,29 @@
 import { createClient } from '@supabase/supabase-js'
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useEffect, useMemo} from "react";
+import {useSystemContext} from "../context/SystemContextApi.jsx";
 const supabaseUrl = 'https://baawitrgtkxttxmreqln.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhYXdpdHJndGt4dHR4bXJlcWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNjI1NDcsImV4cCI6MjA2MjYzODU0N30.HMBdnJ1Y34dHBiNq66MrJ0aICsA28VEFehRdxm-sEsQ'
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export function useApi() {
-  const timeout = useRef(null);
-  const [token, setToken] = useState(null);
-  const [tokenSavedAt, setTokenSavedAt] = useState(null);
+export function useApi({shouldLoadUser} = {}) {
+  const {timeout, token, setToken, tokenSavedAt, setTokenSavedAt, isLoading, setIsLoading} = useSystemContext();
+
+  // const timeout = useRef(null);
+  // const [token, setToken] = useState(null);
+  // const [tokenSavedAt, setTokenSavedAt] = useState(null);
+  // const [isLoading, setIsLoading] = useState(false);
+
   const isLoggedIn = useMemo(() => !!token, [token]);
 
   // Koristiti tokenSavedAt i token.expires_in za racunanje timestamp-a kad token istice.
   const tokenExpiresAt = useMemo(() => {
     if (!token) return null;
-    return tokenSavedAt + (token.expires_in - 59.5 * 60) * 1000;
+    return tokenSavedAt + (token.expires_in - 5 * 60) * 1000;
   }, [token, tokenSavedAt]);
 
   // Napraviti da auto refresh radi ispravno nakon refresha stranice (sesija mora da se zadrzi);
   useEffect(() => {
-    let savedToken = localStorage.getItem('token');
-    if (!savedToken) return;
-    savedToken = JSON.parse(savedToken);
-    setToken(savedToken.token);
-    setTokenSavedAt(savedToken.savedAt);
+   if(shouldLoadUser) loadUser();
   }, []);
 
   useEffect(() => {
@@ -39,30 +40,34 @@ export function useApi() {
     } else {
       refreshToken();
     }
-
   }, [tokenExpiresAt, token]);
 
   async function login() {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: 'admin@admin.com',
-      password: 'admin',
-    })
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'admin@admin.com',
+        password: 'admin',
+      })
 
-    if (error) {
-      console.error('Login error:', error)
-      return
+      if (error) {
+        console.error('Login error:', error)
+        return
+      }
+
+      const accessToken = data.session;
+      const savedAt = new Date().getTime();
+      setToken(accessToken);
+      setTokenSavedAt(savedAt);
+      localStorage.setItem('token', JSON.stringify({token: accessToken, savedAt}));
+      console.log('JWT Access Token:', accessToken)
+    } finally {
+      setIsLoading(false);
     }
-
-    const accessToken = data.session;
-    const savedAt = new Date().getTime();
-    setToken(accessToken);
-    setTokenSavedAt(savedAt);
-    localStorage.setItem('token', JSON.stringify({token: accessToken, savedAt}));
-    console.log('JWT Access Token:', accessToken)
   }
 
   async function refreshToken() {
-    const { data, error } = await supabase.auth.refreshSession({ refresh_token: token.refresh_token + '2'})
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token: token.refresh_token})
 
     if (error) {
       logout();
@@ -93,5 +98,19 @@ export function useApi() {
     }
   }
 
-  return {login, refreshToken, logout, token, tokenSavedAt, tokenExpiresAt, isLoggedIn};
+  async function loadUser() {
+    try {
+      let savedToken = localStorage.getItem('token');
+      if (!savedToken) return;
+      savedToken = JSON.parse(savedToken);
+      setToken(savedToken.token);
+      setTokenSavedAt(savedToken.savedAt);
+      const data = await supabase.auth.getUser();
+      console.log(data);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return {login, refreshToken, logout, token, tokenSavedAt, tokenExpiresAt, isLoggedIn, isLoading};
 }
