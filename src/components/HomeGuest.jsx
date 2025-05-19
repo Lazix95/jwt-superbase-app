@@ -3,7 +3,7 @@ import viteLogo from '/vite.svg'
 import {useApi} from "../hooks/useApi.js";
 
 export function HomeGuest() {
-  const {login, refreshToken, logout, isLoggedIn, tokenSavedAt, tokenExpiresAt} = useApi();
+  const {login, refreshToken, logout, isLoggedIn, tokenSavedAt, tokenExpiresAt, email, password, setEmail, setPassword} = useApi();
 
   return <>
     <div>
@@ -16,6 +16,26 @@ export function HomeGuest() {
     </div>
     <h1>Vite + React</h1>
     <div className="card">
+
+
+      <label>
+        email
+        <input 
+        type='text'
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        />
+      </label>
+
+      <label>
+        password
+        <input 
+        type="text"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        />
+      </label>
+
 
       <button onClick={login}>
         Login

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import {useEffect, useMemo} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {useSystemContext} from "../context/SystemContextApi.jsx";
 const supabaseUrl = 'https://baawitrgtkxttxmreqln.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhYXdpdHJndGt4dHR4bXJlcWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNjI1NDcsImV4cCI6MjA2MjYzODU0N30.HMBdnJ1Y34dHBiNq66MrJ0aICsA28VEFehRdxm-sEsQ'
@@ -12,6 +12,11 @@ export function useApi({shouldLoadUser} = {}) {
   // const [token, setToken] = useState(null);
   // const [tokenSavedAt, setTokenSavedAt] = useState(null);
   // const [isLoading, setIsLoading] = useState(false);
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+
 
   const isLoggedIn = useMemo(() => !!token, [token]);
 
@@ -46,8 +51,8 @@ export function useApi({shouldLoadUser} = {}) {
     try {
       setIsLoading(true);
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'admin@admin.com',
-        password: 'admin',
+        email: email,
+        password: password
       })
 
       if (error) {
@@ -112,5 +117,5 @@ export function useApi({shouldLoadUser} = {}) {
     }
   }
 
-  return {login, refreshToken, logout, token, tokenSavedAt, tokenExpiresAt, isLoggedIn, isLoading};
+  return {login, refreshToken, logout, token, tokenSavedAt, tokenExpiresAt, isLoggedIn, isLoading, email, password, setEmail, setPassword};
 }
