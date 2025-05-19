@@ -7,7 +7,7 @@ const LoginFormContainer = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    login({ username, password });
+    login({ email:username, password });
   };
 
   const { login, isLoading } = useApi({ shouldLoadUser: false });
