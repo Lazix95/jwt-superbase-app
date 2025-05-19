@@ -3,7 +3,7 @@ import viteLogo from '/vite.svg'
 import {useApi} from "../hooks/useApi.js";
 
 export function HomeGuest() {
-  const {login, refreshToken, logout, isLoggedIn, tokenSavedAt, tokenExpiresAt, email, password, setEmail, setPassword} = useApi();
+  const {login, refreshToken, logout, isLoggedIn, tokenSavedAt, tokenExpiresAt, email, password, setEmail, setPassword, isLoading} = useApi();
 
   return <>
     <div>
@@ -38,7 +38,7 @@ export function HomeGuest() {
 
 
       <button onClick={login}>
-        Login
+        {isLoading ? "loading" : "login"}
       </button>
       <p>
         Edit <code>src/App.jsx</code> and save to test HMR
